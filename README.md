@@ -124,6 +124,7 @@ _Lors de la définition d'une zone, spécifier l'adresse du sous-réseau IP avec
 **LIVRABLE : Remplir le tableau**
 
 | Adresse IP source | Adresse IP destination | Type | Port src | Flag | Port dst | Action |
+| :---:             | :---:                  |:---: | :---:    | :---:| :---:    | :---:  |
 | *                 | *	                     | *    | *        |      | *        | block  |
 | 192.168.100.0/24  | *                      | TCP  | *        |      | 53       | allow  |
 | 192.168.100.0/24  | *                      | UDC  | *        |      | 53       | allow  |
