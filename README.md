@@ -123,17 +123,32 @@ _Lors de la définition d'une zone, spécifier l'adresse du sous-réseau IP avec
 
 **LIVRABLE : Remplir le tableau**
 
-| Adresse IP source | Adresse IP destination | Type | Port src | Port dst | Action |
-| :---:             | :---:                  | :---:| :------: | :------: | :----: |
-|                   |                        |      |          |          |        |
-|                   |                        |      |          |          |        |
-|                   |                        |      |          |          |        |
-|                   |                        |      |          |          |        |
-|                   |                        |      |          |          |        |
-|                   |                        |      |          |          |        |
-|                   |                        |      |          |          |        |
+| Adresse IP source | Adresse IP destination | Type | Port src | Flag | Port dst | Action |
+| *                 | *	                     | *    | *        |      | *        | block  |
+| 192.168.100.0/24  | *                      | TCP  | *        |      | 53       | allow  |
+| 192.168.100.0/24  | *                      | UDC  | *        |      | 53       | allow  |
+| *                 | 192.168.100.0/24       | TCP  | 5        | ACK  | *        | allow  |
+| 192.168.100.0/24  | *                      | ICMP | *        |      | *        | allow  |
+| 192.168.100.0/24  | 192.168.200.0/24       | ICMP | *        |      | *        | allow  |
+| 192.168.200.0/24  | 192.168.100.0/24       | ICMP | *        |      | *        | allow  |
+| 192.168.100.0/24  | *                      | TCP  | *        |      | 80       | allow  |
+| *		    | 192.168.100.0/24	     | TCP  | 80       | ACK  | *	 | allow  |
+| 192.168.100.0/24  | *			     | TCP  | *	       |      | 8080     | allow  |
+| *		    | 192.168.100.0/24	     | TCP  | 8080     | ACK  | *        | allow  |
+| 192.168.100.0/24  | *			     | TCP  | *        |      | 443      | allow  |
+| *		    | 192.168.100.0/24       | TCP  | 443      | ACK  | *        | allow  |
+| *                 | 192.168.200.0/24       | TCP  | *        |      | 80       | allow  |
+| 192.168.200.0/24  | *                      | TCP  | 80       |      | *        | allow  |
+| 192.168.100.0/24  | 192.168.200.0/24       | TCP  | *        |      | 22       | allow  |
+| 192.168.200.0/24  | 192.168.100.0/24	     | TCP  | 22       | ACK  | *        | allow  |
+| 192.168.100.0/24  | 192.168.100.2          | TCP  | *        |      | 22       | allow  |
+| 192.168.100.2     | 192.168.100.0/24       | TCP  | 22       | ACK  | *        | allow  |
 
 ---
+
+## MODIFICATION : UDP pas de retour car pas de Flag ? Le ECHO reply c'est pas authorisé
+## Les deux derniére regles pour le parfeu à vérifier 
+
 
 # Installation de l’environnement virtualisé
 
