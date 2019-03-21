@@ -128,7 +128,7 @@ _Lors de la définition d'une zone, spécifier l'adresse du sous-réseau IP avec
 | *                 | *	                     | *    | *        |      | *        | block  |
 | 192.168.100.0/24  | *                      | TCP  | *        |      | 53       | allow  |
 | 192.168.100.0/24  | *                      | UDC  | *        |      | 53       | allow  |
-| *                 | 192.168.100.0/24       | TCP  | 5        | ACK  | *        | allow  |
+| *                 | 192.168.100.0/24       | TCP  | 53       | ACK  | *        | allow  |
 | 192.168.100.0/24  | *                      | ICMP | *        |      | *        | allow  |
 | 192.168.100.0/24  | 192.168.200.0/24       | ICMP | *        |      | *        | allow  |
 | 192.168.200.0/24  | 192.168.100.0/24       | ICMP | *        |      | *        | allow  |
@@ -160,6 +160,7 @@ Il est possible d’utiliser les mêmes instructions sur une version de Windows 
 
 Afin d'installer les différents logiciels présentés ici, il faut disposer d’un ordinateur (avec les droits administrateur).
 
+## Installation de Docker
 ## Installation de Docker
 Docker est un logiciel permettant de créer des conteneurs virtuels afin de simuler diverses configurations. Nous l'utiliserons pour exécuter les trois machines dont nous aurons besoin pour ce laboratoire. L’installation de Docker ne comporte pas de difficulté particulière. Une installation « par défaut » suffira. Il est possible d’utiliser une version que vous avez déjà installée ou une version téléchargée, mais la documentation pour ce laboratoire est fournie pour la version 2.0.0.3. Si vous rencontrez des problèmes, une mise à jour de Docker es peut-être la solution.
 
@@ -592,4 +593,3 @@ A présent, vous devriez avoir le matériel nécessaire afin de reproduire la ta
 
 **LIVRABLE : capture d'écran avec toutes vos règles.**
 
----
