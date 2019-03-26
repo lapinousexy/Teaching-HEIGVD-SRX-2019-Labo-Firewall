@@ -275,7 +275,7 @@ ping 192.168.100.3
 
 ---
 
-**LIVRABLE : capture d'écran de votre nouvelle tentative de ping.**
+![Tentative de ping](img/SRX_Labo02_Image02.png)
 
 ---
 
