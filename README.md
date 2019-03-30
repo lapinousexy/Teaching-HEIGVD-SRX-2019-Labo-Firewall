@@ -119,6 +119,8 @@ Appliquer le principe inverse (être le plus large possible) lorsqu'il faut refu
 
 _Lors de la définition d'une zone, spécifier l'adresse du sous-réseau IP avec son masque (par exemple, "/24" correspond à 255.255.255.0) ou l'interface réseau (par exemple : "interface WAN") si l'adresse du sous-réseau ne peut pas être déterminé avec précision._
 
+Attention : Dans notre cas les interfaces firewall ont comme IP 192.168.100.3 et 192.168.200.3.
+
 ---
 
 | Adresse IP source | Adresse IP destination | Type | Port src | Flag | Port dst | Action |
@@ -491,6 +493,7 @@ iptables -A FORWARD -p tcp --sport 53 -i eth0 -o eth1 -d 192.168.100.0/24 -m con
 
 Le client ne peut pas résoudre le nom de domaine de google.com, mais si nous avions mis directement l'adresse IP, cela
 aurait marché, c'est parce que le client ne peut atteindre le serveur DNS.
+
 ---
 
 
