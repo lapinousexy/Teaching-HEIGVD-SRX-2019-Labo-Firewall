@@ -121,35 +121,31 @@ _Lors de la définition d'une zone, spécifier l'adresse du sous-réseau IP avec
 
 ---
 
-**LIVRABLE : Remplir le tableau**
-
 | Adresse IP source | Adresse IP destination | Type | Port src | Flag | Port dst | Action |
 | :---:             | :---:                  |:---: | :---:    | :---:| :---:    | :---:  |
-| *                 | *	                     | *    | *        |      | *        | block  |
+| *                 | *	                     | *    | *        |      | *        | drop  |
 | 192.168.100.0/24  | *                      | TCP  | *        |      | 53       | allow  |
-| 192.168.100.0/24  | *                      | UDC  | *        |      | 53       | allow  |
+| 192.168.100.0/24  | *                      | UDP  | *        |      | 53       | allow  |
+| *                 | 192.168.100.0/24       | UDP  | 53       |      | *        | allow  |
 | *                 | 192.168.100.0/24       | TCP  | 53       | ACK  | *        | allow  |
-| 192.168.100.0/24  | *                      | ICMP | *        |      | *        | allow  |
-| 192.168.100.0/24  | 192.168.200.0/24       | ICMP | *        |      | *        | allow  |
-| 192.168.200.0/24  | 192.168.100.0/24       | ICMP | *        |      | *        | allow  |
+| 192.168.100.0/24  | *                      | ICMP ECHO  | *        |      | *        | allow  |
+| *                 | 192.168.100.0/24       | ICMP REPLY  | *        |      | *        | allow  |
+| 192.168.200.0/24  | 192.168.100.0/24       | ICMP ECHO | *        |      | *        | allow  |
+| 192.168.100.0/24  | 192.168.200.0/24       | ICMP REPLY | *        |      | *        | allow  |
 | 192.168.100.0/24  | *                      | TCP  | *        |      | 80       | allow  |
 | *		    | 192.168.100.0/24	     | TCP  | 80       | ACK  | *	 | allow  |
 | 192.168.100.0/24  | *			     | TCP  | *	       |      | 8080     | allow  |
 | *		    | 192.168.100.0/24	     | TCP  | 8080     | ACK  | *        | allow  |
 | 192.168.100.0/24  | *			     | TCP  | *        |      | 443      | allow  |
 | *		    | 192.168.100.0/24       | TCP  | 443      | ACK  | *        | allow  |
-| *                 | 192.168.200.0/24       | TCP  | *        |      | 80       | allow  |
-| 192.168.200.0/24  | *                      | TCP  | 80       |      | *        | allow  |
-| 192.168.100.0/24  | 192.168.200.0/24       | TCP  | *        |      | 22       | allow  |
-| 192.168.200.0/24  | 192.168.100.0/24	     | TCP  | 22       | ACK  | *        | allow  |
-| 192.168.100.0/24  | 192.168.100.2          | TCP  | *        |      | 22       | allow  |
-| 192.168.100.2     | 192.168.100.0/24       | TCP  | 22       | ACK  | *        | allow  |
+| *                 | 192.168.200.2       | TCP  | *        |      | 80       | allow  |
+| 192.168.200.2  | *                      | TCP  | 80       | ACK     | *        | allow  |
+| 192.168.100.0/24  | 192.168.200.2       | TCP  | *        |      | 22       | allow  |
+| 192.168.200.2  | 192.168.100.0/24	     | TCP  | 22       | ACK  | *        | allow  |
+| 192.168.100.0/24  | 192.168.100.3          | TCP  | *        |      | 22       | allow  |
+| 192.168.100.3     | 192.168.100.0/24       | TCP  | 22       | ACK  | *        | allow  |
 
 ---
-
-## MODIFICATION : UDP pas de retour car pas de Flag ? Le ECHO reply c'est pas authorisé
-## Les deux derniére regles pour le parfeu à vérifier 
-
 
 # Installation de l’environnement virtualisé
 
@@ -385,16 +381,16 @@ Commandes iptables :
 
 ```bash
 # DMZ -> LAN
-iptables -A FORWARD -p icmp --icmp-type 8 -i eth2 -o eth1 -j ACCEPT
-iptables -A FORWARD -p icmp --icmp-type 0 -i eth1 -o eth2 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 8 -i eth2 -o eth1 -s 192.168.200.0/24 -d 192.168.100.0/24 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 0 -i eth1 -o eth2 -s 192.168.100.0/24 -d 192.168.200.0/24 -j ACCEPT
 
 # LAN -> DMZ
-iptables -A FORWARD -p icmp --icmp-type 8 -i eth1 -o eth2 -j ACCEPT
-iptables -A FORWARD -p icmp --icmp-type 0 -i eth2 -o eth1 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 8 -i eth1 -o eth2 -s 192.168.100.0/24 -d 192.168.200.0/24 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 0 -i eth2 -o eth1 -s 192.168.200.0/24 -d 192.168.100.0/24 -j ACCEPT
 
 # LAN -> WAN
-iptables -A FORWARD -p icmp --icmp-type 8 -i eth1 -o eth0 -j ACCEPT
-iptables -A FORWARD -p icmp --icmp-type 0 -i eth0 -o eth1 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 8 -i eth1 -o eth0 -s 192.168.100.0/24 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 0 -i eth0 -o eth1 -d 192.168.100.0/24 -j ACCEPT
 ```
 ---
 
@@ -464,12 +460,12 @@ Commandes iptables :
 
 ```bash
 # UDP
-iptables -A FORWARD -p udp --dport 53 -i eth1 -o eth0 -j ACCEPT
-iptables -A FORWARD -p udp --sport 53 -i eth0 -o eth1 -j ACCEPT
+iptables -A FORWARD -p udp --dport 53 -i eth1 -o eth0 -s 192.168.100.0/24 -j ACCEPT
+iptables -A FORWARD -p udp --sport 53 -i eth0 -o eth1 -d 192.168.100.0/24 -j ACCEPT
 
 # TCP
-iptables -A FORWARD -p tcp --dport 53 -i eth1 -o eth0 -j ACCEPT
-iptables -A FORWARD -p tcp --sport 53 -i eth0 -o eth1 -j ACCEPT
+iptables -A FORWARD -p tcp --dport 53 -i eth1 -o eth0 -s 192.168.100.0/24 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 53 -i eth0 -o eth1 -d 192.168.100.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 ```
 
 ---
@@ -491,6 +487,8 @@ iptables -A FORWARD -p tcp --sport 53 -i eth0 -o eth1 -j ACCEPT
 </ol>
 
 ---
+**Réponse**
+
 Le client ne peut pas résoudre le nom de domaine de google.com, mais si nous avions mis directement l'adresse IP, cela
 aurait marché, c'est parce que le client ne peut atteindre le serveur DNS.
 ---
@@ -512,15 +510,17 @@ Commandes iptables :
 
 ```bash
 ######### HTTP #########
-iptables -A FORWARD -p tcp --dport 80 -i eth1 -o eth0 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -p tcp --sport 80 -i eth0 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
-iptables -A FORWARD -p tcp --dport 8080 -i eth1 -o eth0 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -p tcp --sport 8080 -i eth0 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --dport 80 -i eth1 -o eth0 -s 192.168.100.0/24 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 80 -i eth0 -o eth1 -d 192.168.100.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+iptables -A FORWARD -p tcp --dport 8080 -i eth1 -o eth0 -s 192.168.100.0/24 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 8080 -i eth0 -o eth1 -d 192.168.100.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 ######### HTTPS #########
-iptables -A FORWARD -p tcp --dport 443 -i eth1 -o eth0 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -p tcp --sport 443 -i eth0 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+iptables -A FORWARD -p tcp --dport 443 -i eth1 -o eth0 -s 192.168.100.0/24 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 443 -i eth0 -o eth1 -d 192.168.100.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 ```
 
 ---
@@ -532,10 +532,9 @@ Commandes iptables :
 ---
 
 ```bash
-######### Serveur WEB #########
 # LAN -> WEB DMZ
-iptables -A FORWARD -p tcp --dport 80 -i eth1 -d 192.168.200.2 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
-iptables -A FORWARD -p tcp --sport 80 -s 192.168.200.2 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --dport 80 -i eth1 -s 192.168.100.0/24 -d 192.168.200.2 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 80 -s 192.168.200.2 -d 192.168.100.0/24 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 
 # WAN -> WEB DMZ
 iptables -A FORWARD -p tcp --dport 80 -i eth0 -d 192.168.200.2 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
@@ -567,7 +566,13 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+# LAN -> DMZ
+iptables -A FORWARD -p tcp --dport 22 -i eth1 -o eth2 -s 192.168.100.0/24 -d 192.168.200.2 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 22 -i eth2 -o eth1 -s 192.168.200.2 -d 192.168.100.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+# LAN -> FIREWALL
+iptables -A INPUT -p tcp --dport 22 -i eth1 -s 192.168.100.0/24 -d 192.168.100.3 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 22 -o eth1 -s 192.168.100.3 -d 192.168.100.0/24 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 ```
 
 ---
@@ -580,7 +585,7 @@ ssh root@192.168.200.3 (password : celui que vous avez configuré)
 
 ---
 
-**LIVRABLE : capture d'écran de votre connexion ssh.**
+![Connexion SSH DMZ](img/SRX_Labo02_Image08.png)
 
 ---
 
@@ -592,7 +597,8 @@ ssh root@192.168.200.3 (password : celui que vous avez configuré)
 ---
 **Réponse**
 
-**LIVRABLE : Votre réponse ici...**
+Parce que un serveur n'est pas forcément accesible physiquement, et il n'a probablement pas d'écran.
+Le SSH permet donc de gérer le serveur à distance.
 
 ---
 
@@ -605,7 +611,7 @@ ssh root@192.168.200.3 (password : celui que vous avez configuré)
 ---
 **Réponse**
 
-**LIVRABLE : Votre réponse ici...**
+Il faut faire attention à bien limiter l'accès au WAN, il ne faudrait pas que ce genre de service soit accessible à n'importe qui.
 
 ---
 
@@ -620,5 +626,7 @@ A présent, vous devriez avoir le matériel nécessaire afin de reproduire la ta
 
 ---
 
-**LIVRABLE : capture d'écran avec toutes vos règles.**
+![Iptables -L](img/SRX_Labo02_Image09.png)
+
+On peut voir que les règles misent en place sont au final plus strict que celle écrites dans le tableau tout au début, cela vient en partie du fait que l'on peut spécifier une interface de sortie WAN (eth0).
 
