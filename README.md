@@ -161,7 +161,6 @@ Il est possible d’utiliser les mêmes instructions sur une version de Windows 
 Afin d'installer les différents logiciels présentés ici, il faut disposer d’un ordinateur (avec les droits administrateur).
 
 ## Installation de Docker
-## Installation de Docker
 Docker est un logiciel permettant de créer des conteneurs virtuels afin de simuler diverses configurations. Nous l'utiliserons pour exécuter les trois machines dont nous aurons besoin pour ce laboratoire. L’installation de Docker ne comporte pas de difficulté particulière. Une installation « par défaut » suffira. Il est possible d’utiliser une version que vous avez déjà installée ou une version téléchargée, mais la documentation pour ce laboratoire est fournie pour la version 2.0.0.3. Si vous rencontrez des problèmes, une mise à jour de Docker es peut-être la solution.
 
 Vous pouvez installer Docker pour Windows et Mac OS depuis https://www.docker.com/products/docker-desktop
@@ -289,7 +288,7 @@ ping 8.8.8.8
 
 ---
 
-**LIVRABLE : capture d'écran de votre ping vers l'Internet.**
+![Tentative de ping](img/SRX_Labo02_Image03.png)
 
 ---
 
@@ -385,7 +384,17 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+# DMZ -> LAN
+iptables -A FORWARD -p icmp --icmp-type 8 -i eth2 -o eth1 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 0 -i eth1 -o eth2 -j ACCEPT
+
+# LAN -> DMZ
+iptables -A FORWARD -p icmp --icmp-type 8 -i eth1 -o eth2 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 0 -i eth2 -o eth1 -j ACCEPT
+
+# LAN -> WAN
+iptables -A FORWARD -p icmp --icmp-type 8 -i eth1 -o eth0 -j ACCEPT
+iptables -A FORWARD -p icmp --icmp-type 0 -i eth0 -o eth1 -j ACCEPT
 ```
 ---
 
@@ -402,7 +411,7 @@ ping 8.8.8.8
 Faire une capture du ping.
 
 ---
-**LIVRABLE : capture d'écran de votre ping vers l'Internet.**
+![Tentative de ping internet](img/SRX_Labo02_Image04.png)
 
 ---
 
@@ -414,18 +423,18 @@ Faire une capture du ping.
 
 | De Client\_in\_LAN à | OK/KO | Commentaires et explications |
 | :---                 | :---: | :---                         |
-| Interface DMZ du FW  |       |                              |
-| Interface LAN du FW  |       |                              |
-| Client LAN           |       |                              |
-| Serveur WAN          |       |                              |
+| Interface DMZ du FW  |  KO  | On ne peut pas pinger le firewall directement car on a mis la règle en forward |
+| Interface LAN du FW  |  KO  | On ne peut pas pinger le firewall directement car on a mis la règle en forward |
+| Client LAN           |  OK  | Les pings request sont autorisés dans le LAN + Car il n'y a pas besoin de passer par le firewall |
+| Serveur WAN          |  OK  | Les pings request sont autorisés dans le LAN |
 
 
 | De Server\_in\_DMZ à | OK/KO | Commentaires et explications |
 | :---                 | :---: | :---                         |
-| Interface DMZ du FW  |       |                              |
-| Interface LAN du FW  |       |                              |
-| Serveur DMZ          |       |                              |
-| Serveur WAN          |       |                              |
+| Interface DMZ du FW  |  KO     | On ne peut pas pinger le firewall directement car on a mis la règle en forward |
+| Interface LAN du FW  |  KO     | On ne peut pas pinger le firewall directement car on a mis la règle en forward |
+| Serveur DMZ          |  OK     | Car il n'y a pas besoin de passer par le firewall |
+| Serveur WAN          |  KO     | Les pings request ne sont pas autorisés dans la DMZ |
 
 
 ## Règles pour le protocole DNS
@@ -443,7 +452,7 @@ ping www.google.com
 
 ---
 
-**LIVRABLE : capture d'écran de votre ping.**
+![Tentative de ping internet DNS](img/SRX_Labo02_Image05.png)
 
 ---
 
@@ -454,7 +463,13 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+# UDP
+iptables -A FORWARD -p udp --dport 53 -i eth1 -o eth0 -j ACCEPT
+iptables -A FORWARD -p udp --sport 53 -i eth0 -o eth1 -j ACCEPT
+
+# TCP
+iptables -A FORWARD -p tcp --dport 53 -i eth1 -o eth0 -j ACCEPT
+iptables -A FORWARD -p tcp --sport 53 -i eth0 -o eth1 -j ACCEPT
 ```
 
 ---
@@ -466,7 +481,7 @@ LIVRABLE : Commandes iptables
 
 ---
 
-**LIVRABLE : capture d'écran de votre ping.**
+![Tentative de ping internet DNS](img/SRX_Labo02_Image06.png)
 
 ---
 
@@ -476,10 +491,8 @@ LIVRABLE : Commandes iptables
 </ol>
 
 ---
-**Réponse**
-
-**LIVRABLE : Votre réponse ici...**
-
+Le client ne peut pas résoudre le nom de domaine de google.com, mais si nous avions mis directement l'adresse IP, cela
+aurait marché, c'est parce que le client ne peut atteindre le serveur DNS.
 ---
 
 
@@ -498,7 +511,16 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+######### HTTP #########
+iptables -A FORWARD -p tcp --dport 80 -i eth1 -o eth0 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 80 -i eth0 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+iptables -A FORWARD -p tcp --dport 8080 -i eth1 -o eth0 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 8080 -i eth0 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+######### HTTPS #########
+iptables -A FORWARD -p tcp --dport 443 -i eth1 -o eth0 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 443 -i eth0 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 ```
 
 ---
@@ -510,7 +532,14 @@ Commandes iptables :
 ---
 
 ```bash
-LIVRABLE : Commandes iptables
+######### Serveur WEB #########
+# LAN -> WEB DMZ
+iptables -A FORWARD -p tcp --dport 80 -i eth1 -d 192.168.200.2 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 80 -s 192.168.200.2 -o eth1 -m conntrack --ctstate ESTABLISHED -j ACCEPT
+
+# WAN -> WEB DMZ
+iptables -A FORWARD -p tcp --dport 80 -i eth0 -d 192.168.200.2 -m conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -p tcp --sport 80 -s 192.168.200.2 -o eth0 -m conntrack --ctstate ESTABLISHED -j ACCEPT
 ```
 ---
 
@@ -521,7 +550,7 @@ LIVRABLE : Commandes iptables
 
 ---
 
-**LIVRABLE : capture d'écran.**
+![Connexion HTTP DMZ](img/SRX_Labo02_Image07.png)
 
 ---
 
