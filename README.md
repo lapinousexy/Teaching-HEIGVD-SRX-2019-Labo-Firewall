@@ -125,27 +125,31 @@ Attention : Dans notre cas les interfaces firewall ont comme IP 192.168.100.3 et
 
 | Adresse IP source | Adresse IP destination | Type | Port src | Flag | Port dst | Action |
 | :---:             | :---:                  |:---: | :---:    | :---:| :---:    | :---:  |
-| *                 | *	                     | *    | *        |      | *        | drop  |
-| 192.168.100.0/24  | *                      | TCP  | *        |      | 53       | allow  |
-| 192.168.100.0/24  | *                      | UDP  | *        |      | 53       | allow  |
-| *                 | 192.168.100.0/24       | UDP  | 53       |      | *        | allow  |
-| *                 | 192.168.100.0/24       | TCP  | 53       | ACK  | *        | allow  |
-| 192.168.100.0/24  | *                      | ICMP ECHO  | *        |      | *        | allow  |
-| *                 | 192.168.100.0/24       | ICMP REPLY  | *        |      | *        | allow  |
-| 192.168.200.0/24  | 192.168.100.0/24       | ICMP ECHO | *        |      | *        | allow  |
-| 192.168.100.0/24  | 192.168.200.0/24       | ICMP REPLY | *        |      | *        | allow  |
-| 192.168.100.0/24  | *                      | TCP  | *        |      | 80       | allow  |
-| *		    | 192.168.100.0/24	     | TCP  | 80       | ACK  | *	 | allow  |
-| 192.168.100.0/24  | *			     | TCP  | *	       |      | 8080     | allow  |
-| *		    | 192.168.100.0/24	     | TCP  | 8080     | ACK  | *        | allow  |
-| 192.168.100.0/24  | *			     | TCP  | *        |      | 443      | allow  |
-| *		    | 192.168.100.0/24       | TCP  | 443      | ACK  | *        | allow  |
-| *                 | 192.168.200.2       | TCP  | *        |      | 80       | allow  |
-| 192.168.200.2  | *                      | TCP  | 80       | ACK     | *        | allow  |
-| 192.168.100.0/24  | 192.168.200.2       | TCP  | *        |      | 22       | allow  |
-| 192.168.200.2  | 192.168.100.0/24	     | TCP  | 22       | ACK  | *        | allow  |
-| 192.168.100.0/24  | 192.168.100.3          | TCP  | *        |      | 22       | allow  |
-| 192.168.100.3     | 192.168.100.0/24       | TCP  | 22       | ACK  | *        | allow  |
+| *                 | *	                     | *    | *        |      | *        | drop   |
+| 192.168.100.0/24  | Interface WAN          | TCP  | *        |      | 53       | accept |
+| 192.168.100.0/24  | Interface WAN          | UDP  | *        |      | 53       | accept |
+| Interface WAN     | 192.168.100.0/24       | UDP  | 53       |      | *        | accept |
+| Interface WAN     | 192.168.100.0/24       | TCP  | 53       | ACK  | *        | accept |
+| 192.168.100.0/24  | Interface WAN          | ICMP ECHO  | *  |      | *        | accept |
+| 192.168.100.0/24  | 192.168.200.0/24       | ICMP ECHO  | *  |      | *        | accept |
+| 192.168.200.0/24  | 192.168.100.0/24       | ICMP REPLY | *  |      | *        | accept |
+| Interface WAN     | 192.168.100.0/24       | ICMP REPLY | *  |      | *        | accept |
+| 192.168.200.0/24  | 192.168.100.0/24       | ICMP ECHO  | *  |      | *        | accept |
+| 192.168.100.0/24  | 192.168.200.0/24       | ICMP REPLY | *  |      | *        | accept |
+| 192.168.100.0/24  | Interface WAN          | TCP  | *        |      | 80       | accept |
+| Interface WAN		  | 192.168.100.0/24	     | TCP  | 80       | ACK  | *	       | accept |
+| 192.168.100.0/24  | Interface WAN			     | TCP  | *	       |      | 8080     | accept |
+| Interface WAN		  | 192.168.100.0/24	     | TCP  | 8080     | ACK  | *        | accept |
+| 192.168.100.0/24  | Interface WAN			     | TCP  | *        |      | 443      | accept |
+| Interface WAN		  | 192.168.100.0/24       | TCP  | 443      | ACK  | *        | accept |
+| Interface WAN     | 192.168.200.2          | TCP  | *        |      | 80       | accept |
+| 192.168.100.0/24  | 192.168.200.2          | TCP  | *        |      | 80       | accept |
+| 192.168.200.2     | Interface WAN          | TCP  | 80       | ACK  | *        | accept |
+| 192.168.200.2     | 192.168.100.0/24       | TCP  | 80       | ACK  | *        | accept |
+| 192.168.100.0/24  | 192.168.200.2          | TCP  | *        |      | 22       | accept |
+| 192.168.200.2     | 192.168.100.0/24	     | TCP  | 22       | ACK  | *        | accept |
+| 192.168.100.0/24  | 192.168.100.3          | TCP  | *        |      | 22       | accept |
+| 192.168.100.3     | 192.168.100.0/24       | TCP  | 22       | ACK  | *        | accept |
 
 ---
 
@@ -632,4 +636,3 @@ A présent, vous devriez avoir le matériel nécessaire afin de reproduire la ta
 ![Iptables -L](img/SRX_Labo02_Image09.png)
 
 On peut voir que les règles misent en place sont au final plus strict que celle écrites dans le tableau tout au début, cela vient en partie du fait que l'on peut spécifier une interface de sortie WAN (eth0).
-
